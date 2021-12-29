@@ -1,0 +1,10 @@
+.DS_Store
+
+# Elastic Beanstalk CLI Files
+.elasticbeanstalk/*
+.build
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
+.env

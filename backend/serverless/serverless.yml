@@ -1,0 +1,57 @@
+service: surreal-backend
+frameworkVersion: "2"
+variablesResolutionMode: 20210326
+
+custom:
+  customDomain:
+    domainName: api.harmonize.gg
+    basePath: "surreal"
+    certificateName: "*.harmonize.gg"
+    createRoute53Record: true
+    endpointType: "regional"
+    apiType: http
+    securityPolicy: tls_1_2
+    stage: ${self:provider.stage}
+  serverless-offline:
+    httpPort: 4000
+
+package:
+  include:
+    - ./abi/BAYC.json
+    - ./abi/MAYC.json
+    - ./auth/allowed.json
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  lambdaHashingVersion: "20201221"
+  stage: prod
+  timeout: 30
+  apiGateway:
+    binaryMediaTypes:
+      - "multipart/form-data"
+  httpApi:
+    cors: true
+  environment:
+    SIGNER_MNEMONIC: ${ssm:/surreal-signer-mnemonic}
+    ALCHEMY: ${ssm:/surreal-alchemy-url}
+
+functions:
+  mintPassSign:
+    handler: mintpass/sign.handler
+    events:
+      - httpApi:
+          method: post
+          path: /mintpass/sign
+  checkUserAuth:
+    handler: auth/checkUser.handler
+    events:
+      - httpApi:
+          method: post
+          path: /user/auth/check
+
+plugins:
+  - serverless-lift
+  - serverless-plugin-typescript
+  - serverless-offline
+  - serverless-domain-manager
