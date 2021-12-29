@@ -18,8 +18,13 @@ const isUserAllowed = (address: string) => {
   }
 };
 
-const verifySignature = async (request: BasicSignature) => {
-  isUserAllowed(request.address);
+const verifySignature = async (
+  request: BasicSignature,
+  adminRequired: boolean
+) => {
+  if (adminRequired) {
+    isUserAllowed(request.address);
+  }
   const signer = verifyMessage(request.address, request.signature);
   if (signer !== request.address) {
     throw Error('Unauthorized signer');

@@ -19,6 +19,7 @@ package:
   include:
     - ./abi/BAYC.json
     - ./abi/MAYC.json
+    - ./abi/Surreal.json
     - ./auth/allowed.json
 
 provider:
@@ -26,15 +27,74 @@ provider:
   runtime: nodejs14.x
   lambdaHashingVersion: "20201221"
   stage: prod
-  timeout: 30
-  apiGateway:
-    binaryMediaTypes:
-      - "multipart/form-data"
+  timeout: 10
   httpApi:
     cors: true
   environment:
     SIGNER_MNEMONIC: ${ssm:/surreal-signer-mnemonic}
     ALCHEMY: ${ssm:/surreal-alchemy-url}
+    CLAIMS_TABLE: "surreal-claims"
+    COLLECTION_TABLE: "surreal-claims-collection-gsi"
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - Fn::GetAtt: [ClaimsTable, Arn]
+            - Fn::Join:
+                [
+                  "/",
+                  [
+                    "Fn::GetAtt": [ClaimsTable, Arn],
+                    "index",
+                    "surreal-claims-collection-gsi",
+                  ],
+                ]
+
+resources:
+  Resources:
+    ClaimsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: claimTx
+            AttributeType: S
+          # - AttributeName: token  // Left here for definition clarity
+          #   AttributeType: S
+          # - AttributeName: address
+          #   AttributeType: S
+          - AttributeName: collection
+            AttributeType: S
+          # - AttributeName: collectionToken
+          #   AttributeType: S
+          - AttributeName: dateClaimed
+            AttributeType: S
+          # - AttributeName: dateRevealed
+          #   AttributeType: S
+          # - AttributeName: metadataUri
+          #   AttributeType: S
+        KeySchema:
+          - AttributeName: claimTx
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: surreal-claims
+        GlobalSecondaryIndexes:
+          - IndexName: surreal-claims-collection-gsi
+            KeySchema:
+              - AttributeName: collection
+                KeyType: HASH
+              - AttributeName: dateClaimed
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
 
 functions:
   mintPassSign:
@@ -43,6 +103,18 @@ functions:
       - httpApi:
           method: post
           path: /mintpass/sign
+  claim:
+    handler: claims/claim.handler
+    events:
+      - httpApi:
+          method: post
+          path: /claims/claim
+  getClaims:
+    handler: claims/getClaims.handler
+    events:
+      - httpApi:
+          method: get
+          path: /claims
   checkUserAuth:
     handler: auth/checkUser.handler
     events:
