@@ -67,7 +67,7 @@ resources:
         AttributeDefinitions:
           - AttributeName: claimTx
             AttributeType: S
-          # - AttributeName: token  // Left here for definition clarity
+          # - AttributeName: tokenId  // Left here for definition clarity
           #   AttributeType: S
           # - AttributeName: address
           #   AttributeType: S

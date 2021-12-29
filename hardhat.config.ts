@@ -48,7 +48,6 @@ const config: HardhatUserConfig = {
       timeout: 120000,
       gasMultiplier: 1,
       gasPrice: 70000000000,
-      loggingEnabled: true,
       accounts: {
         mnemonic: process.env.MAINNET_MNEMONIC ?? ''
       },
@@ -59,7 +58,6 @@ const config: HardhatUserConfig = {
       timeout: 120000,
       gasMultiplier: 1,
       gasPrice: 1000000000,
-      loggingEnabled: true,
       accounts: {
         mnemonic: process.env.RINKEBY_MNEMONIC ?? ''
       },
