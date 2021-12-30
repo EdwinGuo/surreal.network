@@ -151,9 +151,7 @@ const Mintpass = () => {
           </h2>
           <div className="mt-4 text-xl text-gray-400">
             <div className="flex flex-col gap-2">
-              <p className="text-2xl text-emerald-500">
-                {contractInfo?.totalMinted ?? 0}/100 Minted
-              </p>
+              <p className="text-2xl text-emerald-500">100/100 Minted</p>
               <p className="text-2xl text-emerald-500">
                 {contractInfo?.mintPriceString}Ξ
               </p>
