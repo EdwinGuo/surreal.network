@@ -26,6 +26,18 @@ const ClaimTable = ({ claims }: Props) => {
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
+                    Token ID
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Revealed?
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
                     Owner
                   </th>
                   <th
@@ -51,6 +63,12 @@ const ClaimTable = ({ claims }: Props) => {
                     key={claim.claimTx}
                     className={claimIdx % 2 === 0 ? "bg-white" : "bg-gray-50"}
                   >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {claim.tokenId === undefined ? "Check Tx" : claim.tokenId}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {claim.dateRevealed === undefined ? "No" : "Yes"}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {claim.address}
                     </td>

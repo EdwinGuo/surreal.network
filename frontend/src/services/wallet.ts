@@ -200,6 +200,9 @@ export interface Claim {
   claimTx: string;
   address: string;
   dateClaimed: string;
+  dateRevealed?: string;
+  tokenId?: string;
+  metadataUri?: string;
 }
 const getClaimsList = async (authSignature: BasicSignature) => {
   return (
