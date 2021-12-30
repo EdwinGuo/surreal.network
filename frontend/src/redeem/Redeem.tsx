@@ -100,6 +100,8 @@ const Redeem = () => {
     setClaimTx(undefined);
     setSignature(undefined);
     setErrorMessage("");
+    setCollectionToken(userInfo?.ownedCollectionTokens[0].tokenId);
+    setCollection(collections[0]);
   };
 
   const claimWindowOpen = () => {
