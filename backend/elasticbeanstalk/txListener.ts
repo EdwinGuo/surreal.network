@@ -23,13 +23,38 @@ const onRevealed = async (tokenId: number, revealTxHash: string) => {
       revealTx.data
     );
     const metadataUri: string = decodedData.revealedTokenURI;
-    await updateItem(tokenId, claimTx, metadataUri);
+    await updateRevealedItem(tokenId, claimTx, metadataUri);
   } catch (error) {
     console.error(error);
   }
 };
 
-const updateItem = async (
+const onMined = async (tokenId: number) => {
+  try {
+    const claimTx = await getClaimTx(tokenId);
+    updateMinedItem(tokenId, claimTx);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const updateMinedItem = async (tokenId: number, claimTx: string) => {
+  const params: DynamoDB.DocumentClient.UpdateItemInput = {
+    TableName: CLAIMS_TABLE,
+    Key: {
+      claimTx: claimTx
+    },
+    UpdateExpression: 'set tokenId = :t',
+    ExpressionAttributeValues: {
+      ':t': `${tokenId}`
+    }
+  };
+  await dynamoDbClient.update(params).promise();
+  console.log('Token ' + tokenId + ' minted');
+  console.log('Updated ' + claimTx);
+};
+
+const updateRevealedItem = async (
   tokenId: number,
   claimTx: string,
   metadataUri: string
@@ -75,6 +100,25 @@ const start = async () => {
   });
 
   surrealContract = new Contract(SURREAL_CONTRACT, Surreal, provider);
+
+  provider.on(
+    {
+      address: SURREAL_CONTRACT,
+      topics: [
+        '0x6aa3eac93d079e5e100b1029be716caa33586c96aa4baac390669fb5c2a21212',
+        null
+      ]
+    },
+    (log, _) => {
+      try {
+        const topics = log.topics;
+        const tokenId = BigNumber.from(topics.pop()).toNumber();
+        onMined(tokenId);
+      } catch (error) {
+        console.error('txListener: ' + error);
+      }
+    }
+  );
 
   provider.on(
     {
