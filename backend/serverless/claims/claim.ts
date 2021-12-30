@@ -62,13 +62,17 @@ const handler = async (event: APIGatewayEvent) => {
     try {
       const transaction = await web3Provider.getTransaction(claim.claimTx);
       // Validate that this tx was for the claim function
-      surrealInterface.decodeFunctionData('claim', transaction.data);
+      try {
+        surrealInterface.decodeFunctionData('claim', transaction.data);
+      } catch (error) {
+        throw Error('Invalid transaction provided');
+      }
       if (
         transaction.from.toLowerCase() !== address.toLowerCase() ||
         transaction.to?.toLowerCase() !== SURREAL_CONTRACT.toLowerCase() ||
         (claim.collection !== 'MAYC' && claim.collection !== 'BAYC')
       ) {
-        throw Error();
+        throw Error('Incorrect collection provided. Must be BAYC or MAYC.');
       }
 
       let contract: Contract;
@@ -79,19 +83,22 @@ const handler = async (event: APIGatewayEvent) => {
         case 'MAYC':
           contract = maycContract;
           break;
-        default:
-          throw Error();
       }
 
       if (
         (await contract.ownerOf(claim.collectionToken).toLowerCase()) !==
         address.toLowerCase()
       ) {
-        throw Error();
+        throw Error(
+          'You do not own ' + claim.collection + ' #' + claim.collectionToken
+        );
       }
-    } catch {
+    } catch (error) {
       return {
         statusCode: 401,
+        body: JSON.stringify({
+          error: error.message
+        }),
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json'

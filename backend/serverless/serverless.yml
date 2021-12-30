@@ -108,7 +108,7 @@ functions:
     events:
       - httpApi:
           method: post
-          path: /claims/claim
+          path: /claims
   getClaims:
     handler: claims/getClaims.handler
     events:

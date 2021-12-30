@@ -152,16 +152,13 @@ const validateNetwork = async () => {
 
 const getUserInfo = async (address: string, contractInfo: ContractInfo) => {
   try {
-    let signature: string | undefined;
-    if (contractInfo.requiresSignature) {
-      signature = (
-        (
-          await axios.post('https://api.harmonize.gg/surreal/mintpass/sign', {
-            address
-          })
-        ).data as SignatureResponse
-      ).signature;
-    }
+    const signature: string = (
+      (
+        await axios.post('https://api.harmonize.gg/surreal/mintpass/sign', {
+          address
+        })
+      ).data as SignatureResponse
+    ).signature;
 
     const mintPassContract = getMintPassContract();
     const numberMinted = (
@@ -184,6 +181,7 @@ const getUserInfo = async (address: string, contractInfo: ContractInfo) => {
 
     return userInfo;
   } catch (error) {
+    console.error(error);
     if (axios.isAxiosError(error)) {
       const errorMessage = (error as AxiosError).toJSON() as ErrorResponse;
       throw Error(errorMessage.message);
@@ -218,15 +216,46 @@ const mint = async (
   return tx.hash;
 };
 
-const claim = async (
-  address: string,
-  mintPassTokenId: string,
-  collection: string,
-  collectionTokenId: string
-) => {
-  // endpoint should receive all this info
-  // + tx hash
+const wait = async (time: number) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve('');
+    }, time);
+  });
+};
+
+const claim = async (mintPassTokenId: string, signature: string) => {
   const contract = getSurrealContract();
+
+  const claimTx = await contract.claim(signature, mintPassTokenId);
+
+  return claimTx.hash;
+};
+
+const chooseCollection = async (
+  authSignature: BasicSignature,
+  collection: string,
+  collectionToken: string,
+  claimTx: string
+) => {
+  await axios.post(
+    'https://api.harmonize.gg/surreal/claims',
+    {
+      claimTx,
+      collection,
+      collectionToken
+    },
+    {
+      auth: {
+        username: authSignature.address,
+        password: authSignature.signature
+      },
+      headers: {
+        accept: 'application/json',
+        'Content-Type': `application/json`
+      }
+    }
+  );
 };
 
 const listen = async (hash: string) => {
@@ -397,14 +426,16 @@ const getUserOwnedEditions = async (
 };
 
 export {
+  checkAdminStatus,
+  checkConnection,
+  chooseCollection,
+  connect,
+  claim,
+  getContractInfo,
+  getOwnedFromCollection,
+  getUserInfo,
   listen,
   mint,
-  checkConnection,
-  connect,
-  getContractInfo,
-  getUserInfo,
   requestAuthHeaders,
-  checkAdminStatus,
-  reveal,
-  getOwnedFromCollection
+  reveal
 };

@@ -2,17 +2,13 @@ import apes from "./../images/apes.gif";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../app/store";
 import { useEffect, useState } from "react";
-import {
-  BasicSignature,
-  MintStatus,
-  requestAuthHeaders,
-} from "../services/wallet";
+import { BasicSignature, listen, requestAuthHeaders } from "../services/wallet";
 import { connectWallet, selectCollection } from "../store/wallet/walletSlice";
 import {
   DropdownItem,
   SimpleDropdown,
 } from "../components/dropdowns/SimpleDropdown";
-import { collections } from "../services/wallet";
+import { collections, claim, chooseCollection } from "../services/wallet";
 import Loader from "../components/loader/Loader";
 import {
   SimpleStep,
@@ -93,9 +89,16 @@ const Redeem = () => {
   const dispatch = useDispatch();
   const [claimState, setClaimState] = useState(ClaimState.NONE);
   const [signature, setSignature] = useState<BasicSignature | undefined>();
+  const [collection, setCollection] = useState(collections[0]);
+  const [collectionToken, setCollectionToken] = useState<string | undefined>();
+  const [mintPassTokenId, setMintPassTokenId] = useState(1);
+  const [claimTx, setClaimTx] = useState<string | undefined>();
+  const [errorMessage, setErrorMessage] = useState("");
 
   const resetState = () => {
     setClaimState(ClaimState.NONE);
+    setClaimTx(undefined);
+    setSignature(undefined);
   };
 
   const claimWindowOpen = () => {
@@ -105,17 +108,22 @@ const Redeem = () => {
   const { userInfo, connection, isLoadingCollection, contractInfo } =
     useSelector((state: RootState) => state.wallet);
 
-  const [collection, setCollection] = useState(collections[0]);
-
-  const onSelect = (item: DropdownItem) => {
+  const onSelectCollection = (item: DropdownItem) => {
     setCollection({
       name: item.value,
       address: item.key,
     });
   };
 
+  const onSelectCollectionToken = (item: DropdownItem) => {
+    setCollectionToken(item.value);
+  };
+
   useEffect(() => {
-    // dispatch(selectCollection(collection));
+    const dispatchSelectCollection = async () => {
+      dispatch(selectCollection(collection));
+    };
+    dispatchSelectCollection();
   }, [collection]);
 
   const canBurn = () => {
@@ -126,16 +134,81 @@ const Redeem = () => {
   };
 
   const requestSignature = () => {
+    setClaimState(ClaimState.SIGNING);
     const dispatchRequestSignature = async () => {
       try {
         const signature = await requestAuthHeaders();
         setSignature(signature);
+        setClaimState(ClaimState.CLAIMING);
       } catch (error) {
         setClaimState(ClaimState.ERROR);
       }
     };
     dispatchRequestSignature();
   };
+
+  const claimSurreal = () => {
+    const dispatchClaimRequest = async () => {
+      const claimTx = await claim(
+        `${mintPassTokenId}`,
+        userInfo?.signature ?? ""
+      );
+      setClaimTx(claimTx);
+      setClaimState(ClaimState.WAITING);
+    };
+    dispatchClaimRequest();
+  };
+
+  const waitForClaim = () => {
+    const dispatchWaitForClaim = async () => {
+      if (claimTx) {
+        try {
+          if (signature === undefined) {
+            throw Error("Invalid signature");
+          }
+          if (collectionToken === undefined) {
+            throw Error("Invalid Token Selected");
+          }
+          await listen(claimTx);
+          await chooseCollection(
+            signature,
+            collection.name,
+            collectionToken,
+            claimTx
+          );
+          setClaimState(ClaimState.DONE);
+        } catch (error) {
+          console.error(error);
+          setClaimState(ClaimState.ERROR);
+        }
+      }
+    };
+    dispatchWaitForClaim();
+  };
+
+  const claimClicked = () => {
+    setClaimState(ClaimState.SIGNING);
+  };
+
+  useEffect(() => {
+    switch (claimState) {
+      case ClaimState.SIGNING:
+        requestSignature();
+        break;
+      case ClaimState.CLAIMING:
+        claimSurreal();
+        break;
+      case ClaimState.WAITING:
+        waitForClaim();
+        break;
+      case ClaimState.ERROR:
+        setErrorMessage(
+          "Something went wrong while claiming. Please try again. " +
+            (claimTx ? "Claim Tx: " + claimTx : "")
+        );
+        break;
+    }
+  }, [claimState]);
 
   return (
     <div className="bg-gray-800 mt-8" id="Redeem">
@@ -149,16 +222,22 @@ const Redeem = () => {
           <h2 className="text-4xl font-extrabold text-white sm:text-5xl sm:tracking-tight lg:text-6xl mt-8">
             SURREAL APES
           </h2>
-          {claimState == ClaimState.NONE ? (
+          {claimState === ClaimState.NONE ? (
             <h2 className="text-xl font-medium text-white sm:text-xl sm:tracking-tight lg:text-xl mt-4">
               Choose your ape
             </h2>
-          ) : claimState !== ClaimState.DONE ? (
+          ) : claimState !== ClaimState.DONE &&
+            claimState !== ClaimState.ERROR ? (
             <Loader className="mt-6" />
-          ) : claimState == ClaimState.DONE ? (
+          ) : claimState === ClaimState.DONE ||
+            claimState === ClaimState.ERROR ? (
             <button onClick={resetState}>
               <div className="hover:bg-emerald-400 text-white bg-emerald-600 text-xs bg-secondary text-contrast py-3 px-6 w-52 rounded-lg shadow-sm text-center mt-4">
-                <h1 className="text-lg font-bold">Claim Additional</h1>
+                {claimState === ClaimState.DONE ? (
+                  <h1 className="text-lg font-bold">Claim Additional</h1>
+                ) : (
+                  <h1 className="text-lg font-bold">Retry</h1>
+                )}
               </div>
             </button>
           ) : (
@@ -167,10 +246,10 @@ const Redeem = () => {
           <div className="text-xl text-gray-400">
             {canBurn() && claimWindowOpen() ? (
               <div className="flex flex-col gap-4">
-                {claimState == ClaimState.NONE ? (
+                {claimState === ClaimState.NONE ? (
                   <div className="flex flex-row gap-4 mt-4">
                     <SimpleDropdown
-                      onSelect={onSelect}
+                      onSelect={onSelectCollection}
                       items={collections.map((item) => {
                         return { value: item.name, key: item.address };
                       })}
@@ -181,7 +260,7 @@ const Redeem = () => {
                       <Loader className="mt-7 ml-8" />
                     ) : (userInfo?.ownedCollectionTokens ?? []).length > 0 ? (
                       <SimpleDropdown
-                        onSelect={onSelect}
+                        onSelect={onSelectCollectionToken}
                         items={
                           userInfo?.ownedCollectionTokens.map((item) => {
                             return { value: item.tokenId, key: item.tokenId };
@@ -200,13 +279,13 @@ const Redeem = () => {
 
                 {(userInfo?.ownedCollectionTokens ?? []).length > 0 &&
                 !isLoadingCollection &&
-                claimState == ClaimState.NONE ? (
+                claimState === ClaimState.NONE ? (
                   <>
                     <h2 className="text-xl font-medium text-white sm:text-xl sm:tracking-tight lg:text-xl mt-4">
                       Burn your mint pass
                     </h2>
                     <SimpleDropdown
-                      onSelect={onSelect}
+                      onSelect={() => {}}
                       items={
                         userInfo?.userOwnedEditions.map((item) => {
                           return {
@@ -220,7 +299,7 @@ const Redeem = () => {
                     ></SimpleDropdown>
                     {claimState === ClaimState.NONE ||
                     claimState === ClaimState.ERROR ? (
-                      <button>
+                      <button onClick={claimClicked}>
                         <div className="hover:bg-emerald-400 text-white bg-emerald-600 text-xs bg-secondary text-contrast py-3 px-6 w-52 rounded-lg shadow-sm text-center mt-4">
                           <h1 className="text-lg font-bold">Claim Surreal</h1>
                         </div>
@@ -278,10 +357,14 @@ const Redeem = () => {
         ) : (
           ""
         )}
-        {claimState === ClaimState.ERROR
-          ? //Show some error
-            ""
-          : ""}
+        {claimState === ClaimState.ERROR ? (
+          //Show some error
+          <div className="flex flex-col items-center">
+            <h1 className="text-2xl text-red-500">{errorMessage}</h1>
+          </div>
+        ) : (
+          ""
+        )}
         {claimState === ClaimState.DONE ? "" : ""}
       </div>
     </div>
