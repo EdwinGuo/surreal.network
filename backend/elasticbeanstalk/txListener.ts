@@ -72,7 +72,7 @@ const start = async () => {
   // const alchemyUrl = await getSecret(ALCHEMY_URL);
   const alchemyUrl =
     'https://eth-rinkeby.alchemyapi.io/v2/BSMsDyBIdtljAPlGdde_sTmzBnCx86AX';
-  provider = new JsonRpcProvider(alchemyUrl);
+  provider = new JsonRpcProvider(alchemyUrl, 'rinkeby');
 
   surrealContract = new Contract(SURREAL_CONTRACT_RINKEBY, Surreal, provider);
 
