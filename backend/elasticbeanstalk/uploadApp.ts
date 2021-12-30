@@ -3,7 +3,7 @@ import cors from 'cors';
 import multer from 'multer';
 import { authorize, handleUploadRequest } from './metadata/upload';
 const app = express();
-const port = process.env.PORT ?? 80; // default port to listen
+const port = 8080; // default port to listen
 
 const upload = multer();
 app.use(
