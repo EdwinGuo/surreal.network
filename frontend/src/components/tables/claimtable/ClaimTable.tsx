@@ -64,7 +64,21 @@ const ClaimTable = ({ claims }: Props) => {
                     className={claimIdx % 2 === 0 ? "bg-white" : "bg-gray-50"}
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {claim.tokenId === undefined ? "Check Tx" : claim.tokenId}
+                      {claim.tokenId === undefined ? "Check Tx" : ""}
+                      {claim.tokenId ? (
+                        <a
+                          href={
+                            "https://opensea.io/assets/0xbc4aee331e970f6e7a5e91f7b911bdbfdf928a98/" +
+                            claim.tokenId
+                          }
+                          target="_blank"
+                          className="text-indigo-600 hover:text-indigo-900"
+                        >
+                          {claim.tokenId}
+                        </a>
+                      ) : (
+                        ""
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {claim.dateRevealed === undefined ? "No" : "Yes"}

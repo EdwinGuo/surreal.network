@@ -205,7 +205,7 @@ export interface Claim {
   metadataUri?: string;
 }
 const getClaimsList = async (authSignature: BasicSignature) => {
-  return (
+  const claims = (
     await axios.get('https://api.harmonize.gg/surreal/claims', {
       auth: {
         username: authSignature.address,
@@ -217,6 +217,12 @@ const getClaimsList = async (authSignature: BasicSignature) => {
       }
     })
   ).data as Array<Claim>;
+  return claims.sort((a, b) => {
+    if (a.tokenId && b.tokenId) {
+      return a.tokenId.localeCompare(b.tokenId);
+    }
+    return 0;
+  });
 };
 
 const mint = async (
