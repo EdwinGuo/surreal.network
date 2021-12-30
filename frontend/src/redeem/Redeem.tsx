@@ -103,8 +103,7 @@ const Redeem = () => {
   };
 
   const claimWindowOpen = () => {
-    // return contractInfo?.claimsEnabled ?? false;
-    return true;
+    return contractInfo?.claimsEnabled ?? false;
   };
 
   const { userInfo, connection, isLoadingCollection, contractInfo } =
