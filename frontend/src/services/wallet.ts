@@ -152,13 +152,16 @@ const validateNetwork = async () => {
 
 const getUserInfo = async (address: string, contractInfo: ContractInfo) => {
   try {
-    const signature: string = (
-      (
-        await axios.post('https://api.harmonize.gg/surreal/mintpass/sign', {
-          address
-        })
-      ).data as SignatureResponse
-    ).signature;
+    let signature: string | undefined;
+    try {
+      signature = (
+        (
+          await axios.post('https://api.harmonize.gg/surreal/mintpass/sign', {
+            address
+          })
+        ).data as SignatureResponse
+      ).signature;
+    } catch {}
 
     const mintPassContract = getMintPassContract();
     const numberMinted = (
