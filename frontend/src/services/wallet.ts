@@ -19,7 +19,7 @@ let alchemyProvider = new JsonRpcProvider(
 );
 const SURREAL_MINTPASS_ADDRESS = '0x18d0e051317e04ae96314c372bd35220460eec62';
 const SURREAL_MINTPASS_ADDRESS_RINKEBY =
-  '0xa2526f15c474935a7634ef383d478e893f7f54ac';
+  '0x6F5FfE767EB8C637aA498f249f32178CDAb6cD77';
 
 const SURREAL_ADDRESS = '0xBC4AEE331E970f6E7A5e91f7B911BdBFdF928A98';
 const SURREAL_ADDRESS_RINKEBY = '0xa1B6413BbD6Fc5533d024F0A6Ae92e5bd2a20e20';
@@ -216,14 +216,6 @@ const mint = async (
   return tx.hash;
 };
 
-const wait = async (time: number) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve('');
-    }, time);
-  });
-};
-
 const claim = async (mintPassTokenId: string, signature: string) => {
   const contract = getSurrealContract();
 
@@ -382,23 +374,28 @@ const getContractOfCollection = (collection: Collection) => {
 const defaultTokenResponse: Array<CollectionToken> = [];
 
 const getOwnedFromCollection = async (collection: Collection) => {
-  const contract = getContractOfCollection(collection);
-  const signer = provider.getSigner();
+  try {
+    const contract = getContractOfCollection(collection);
+    const signer = provider.getSigner();
 
-  const address = await signer.getAddress();
-  let tokens: Array<CollectionToken> = [];
-  const balance: BigNumber = await contract.balanceOf(address);
-  for (let index = 0; index < balance.toNumber(); index++) {
-    const apeTokenId: BigNumber = await contract.tokenOfOwnerByIndex(
-      address,
-      index
-    );
-    tokens.push({ tokenId: apeTokenId.toString() });
-  }
-  if (tokens.length === 0) {
+    const address = await signer.getAddress();
+    let tokens: Array<CollectionToken> = [];
+    const balance: BigNumber = await contract.balanceOf(address);
+    for (let index = 0; index < balance.toNumber(); index++) {
+      const apeTokenId: BigNumber = await contract.tokenOfOwnerByIndex(
+        address,
+        index
+      );
+      tokens.push({ tokenId: apeTokenId.toString() });
+    }
+    if (tokens.length === 0) {
+      return defaultTokenResponse;
+    }
+    return tokens;
+  } catch (error) {
+    console.error(error);
     return defaultTokenResponse;
   }
-  return tokens;
 };
 
 const availableEditions = [1];

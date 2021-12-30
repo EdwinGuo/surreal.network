@@ -19,12 +19,12 @@ async function main() {
   );
 
   const contract = await SurrealMintPassFactory.deploy(
-    '0x6560c8dF05a0823FAaEBF40E52Adcad1e8A5371A', //signer
-    '0x37C6E1D755112213d5E7D5e2Aca2b83192f7cF35', //admin
-    '0x5Fea9DAcdE1fb43E87b8a9259Aebc937D995F51b', //dev
-    '0xBC4AEE331E970f6E7A5e91f7B911BdBFdF928A98', //surreal contract
+    '0xBa0d9255Bf420E1A23A274f011D7074800B96AE2', //signer
+    '0xA879F1096b2F65D7600fe6244F208A39348fEF65', //admin
+    '0xA879F1096b2F65D7600fe6244F208A39348fEF65', //dev
+    '0xa1B6413BbD6Fc5533d024F0A6Ae92e5bd2a20e20', //surreal contract
     [
-      '0x37C6E1D755112213d5E7D5e2Aca2b83192f7cF35',
+      '0xA879F1096b2F65D7600fe6244F208A39348fEF65',
       '0xfAd0feC24047f510D110fB03b73e57a72e91f33D'
     ],
     [75, 25]

@@ -10,7 +10,6 @@ const dynamoDbClient = new AWS.DynamoDB.DocumentClient({
 const CLAIMS_TABLE = process.env.CLAIMS_TABLE ?? 'surreal-claims';
 
 const SURREAL_CONTRACT = '0xBC4AEE331E970f6E7A5e91f7B911BdBFdF928A98';
-const SURREAL_CONTRACT_RINKEBY = '0xa1B6413BbD6Fc5533d024F0A6Ae92e5bd2a20e20';
 
 let provider: JsonRpcProvider;
 let surrealContract: Contract;
@@ -69,16 +68,17 @@ const getClaimTx = async (tokenId: number) => {
 };
 
 const start = async () => {
-  // const alchemyUrl = await getSecret(ALCHEMY_URL);
-  const alchemyUrl =
-    'https://eth-rinkeby.alchemyapi.io/v2/BSMsDyBIdtljAPlGdde_sTmzBnCx86AX';
-  provider = new JsonRpcProvider(alchemyUrl, 'rinkeby');
+  const alchemyUrl = await getSecret(ALCHEMY_URL);
+  provider = new JsonRpcProvider(alchemyUrl, {
+    name: 'mainnet',
+    chainId: 1
+  });
 
-  surrealContract = new Contract(SURREAL_CONTRACT_RINKEBY, Surreal, provider);
+  surrealContract = new Contract(SURREAL_CONTRACT, Surreal, provider);
 
   provider.on(
     {
-      address: SURREAL_CONTRACT_RINKEBY,
+      address: SURREAL_CONTRACT,
       topics: [
         '0xa109ba539900bf1b633f956d63c96fc89b814c7287f7aa50a9216d0b55657207',
         null

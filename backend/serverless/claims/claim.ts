@@ -12,7 +12,6 @@ const CLAIMS_TABLE = process.env.CLAIMS_TABLE ?? '';
 const SURREAL_CONTRACT = '0xBC4AEE331E970f6E7A5e91f7B911BdBFdF928A98';
 const BAYC_ADDRESS = '0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d';
 const MAYC_ADDRESS = '0x60e4d786628fea6478f785a6d7e704777c86a7c6';
-
 const surrealInterface = new ethers.utils.Interface(Surreal);
 export interface Claim {
   claimTx: string;
@@ -86,7 +85,7 @@ const handler = async (event: APIGatewayEvent) => {
       }
 
       if (
-        (await contract.ownerOf(claim.collectionToken).toLowerCase()) !==
+        (await contract.ownerOf(claim.collectionToken)).toLowerCase() !==
         address.toLowerCase()
       ) {
         throw Error(

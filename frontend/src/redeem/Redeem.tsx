@@ -99,14 +99,26 @@ const Redeem = () => {
     setClaimState(ClaimState.NONE);
     setClaimTx(undefined);
     setSignature(undefined);
+    setErrorMessage("");
   };
 
   const claimWindowOpen = () => {
-    return contractInfo?.claimsEnabled ?? false;
+    // return contractInfo?.claimsEnabled ?? false;
+    return true;
   };
 
   const { userInfo, connection, isLoadingCollection, contractInfo } =
     useSelector((state: RootState) => state.wallet);
+
+  useEffect(() => {
+    if (
+      userInfo &&
+      userInfo.ownedCollectionTokens &&
+      userInfo.ownedCollectionTokens.length > 0
+    ) {
+      setCollectionToken(userInfo.ownedCollectionTokens[0].tokenId);
+    }
+  }, [userInfo]);
 
   const onSelectCollection = (item: DropdownItem) => {
     setCollection({
@@ -149,12 +161,16 @@ const Redeem = () => {
 
   const claimSurreal = () => {
     const dispatchClaimRequest = async () => {
-      const claimTx = await claim(
-        `${mintPassTokenId}`,
-        userInfo?.signature ?? ""
-      );
-      setClaimTx(claimTx);
-      setClaimState(ClaimState.WAITING);
+      try {
+        const claimTx = await claim(
+          `${mintPassTokenId}`,
+          userInfo?.signature ?? ""
+        );
+        setClaimTx(claimTx);
+        setClaimState(ClaimState.WAITING);
+      } catch (error) {
+        setClaimState(ClaimState.ERROR);
+      }
     };
     dispatchClaimRequest();
   };
