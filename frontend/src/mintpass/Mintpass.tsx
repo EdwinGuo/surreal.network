@@ -131,16 +131,15 @@ const Mintpass = () => {
   };
 
   const canMintMore = () => {
-    return (
-      (userInfo?.numberMinted ?? 0) < (contractInfo?.maxMintPerWallet ?? 0)
-    );
+    return false;
   };
 
   const isSoldOut = () => {
-    if (contractInfo === undefined) {
-      return false;
-    }
-    return contractInfo.totalMinted >= contractInfo.maxTokens;
+    // if (contractInfo === undefined) {
+    //   return false;
+    // }
+    // return contractInfo.totalMinted >= contractInfo.maxTokens;
+    return true;
   };
 
   return (
