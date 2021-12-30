@@ -226,6 +226,7 @@ const claim = async (
 ) => {
   // endpoint should receive all this info
   // + tx hash
+  const contract = getSurrealContract();
 };
 
 const listen = async (hash: string) => {

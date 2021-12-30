@@ -3,14 +3,17 @@ import { APIGatewayEvent } from 'aws-lambda';
 import AWS, { DynamoDB } from 'aws-sdk';
 import { authorize } from '../auth/authorize';
 import Surreal from '../abi/Surreal.json';
-import { ethers } from 'ethers';
+import BAYC from '../abi/BAYC.json';
+import MAYC from '../abi/MAYC.json';
+import { Contract, ethers } from 'ethers';
 
 const dynamoDbClient = new AWS.DynamoDB.DocumentClient();
 const CLAIMS_TABLE = process.env.CLAIMS_TABLE ?? '';
 const SURREAL_CONTRACT = '0xBC4AEE331E970f6E7A5e91f7B911BdBFdF928A98';
+const BAYC_ADDRESS = '0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d';
+const MAYC_ADDRESS = '0x60e4d786628fea6478f785a6d7e704777c86a7c6';
 
 const surrealInterface = new ethers.utils.Interface(Surreal);
-
 export interface Claim {
   claimTx: string;
   collection: string;
@@ -20,6 +23,9 @@ const web3Provider = new JsonRpcProvider(process.env.ALCHEMY, {
   name: 'mainnet',
   chainId: 1
 });
+
+const maycContract = new ethers.Contract(MAYC_ADDRESS, MAYC, web3Provider);
+const baycContract = new ethers.Contract(BAYC_ADDRESS, BAYC, web3Provider);
 
 const handler = async (event: APIGatewayEvent) => {
   if (
@@ -56,11 +62,30 @@ const handler = async (event: APIGatewayEvent) => {
     try {
       const transaction = await web3Provider.getTransaction(claim.claimTx);
       // Validate that this tx was for the claim function
-      //   surrealInterface.decodeFunctionData('claim', transaction.data);
+      surrealInterface.decodeFunctionData('claim', transaction.data);
       if (
         transaction.from.toLowerCase() !== address.toLowerCase() ||
         transaction.to?.toLowerCase() !== SURREAL_CONTRACT.toLowerCase() ||
         (claim.collection !== 'MAYC' && claim.collection !== 'BAYC')
+      ) {
+        throw Error();
+      }
+
+      let contract: Contract;
+      switch (claim.collection) {
+        case 'BAYC':
+          contract = baycContract;
+          break;
+        case 'MAYC':
+          contract = maycContract;
+          break;
+        default:
+          throw Error();
+      }
+
+      if (
+        (await contract.ownerOf(claim.collectionToken).toLowerCase()) !==
+        address.toLowerCase()
       ) {
         throw Error();
       }
