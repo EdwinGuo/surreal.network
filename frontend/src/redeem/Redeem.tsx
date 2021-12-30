@@ -346,7 +346,7 @@ const Redeem = () => {
                   </button>
                 ) : (
                   <h1 className="mt-8 font-extrabold text-emerald-400">
-                    Redeeming Soon
+                    <Loader></Loader>
                   </h1>
                 )}
               </div>

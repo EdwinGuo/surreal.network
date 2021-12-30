@@ -2,8 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import ErrorAlert, { ErrorAlertProps } from "../components/alerts/ErrorAlert";
 import InfoAlert from "../components/alerts/InfoAlert";
+import ClaimTable from "../components/tables/claimtable/ClaimTable";
 import { uploadImagetoIPFS } from "../services/upload";
 import {
+  BasicSignature,
+  Claim,
+  getClaimsList,
   listen,
   MintStatus,
   requestAuthHeaders,
@@ -25,6 +29,8 @@ const Admin = (props: Props) => {
   >();
   const [fileURL, setFileURL] = useState<string | undefined>();
   const [revealTx, setRevealTx] = useState<string | undefined>();
+  const [authHeaders, setAuthHeaders] = useState<BasicSignature | undefined>();
+  const [claimsList, setClaimsList] = useState<Array<Claim>>([]);
 
   const [errorAlertMessages, setErrorAlertMessages] = useState<
     Array<string> | undefined
@@ -49,7 +55,12 @@ const Admin = (props: Props) => {
         collectionTokenNumber &&
         surrealTokenNumber
       ) {
-        const headers = await requestAuthHeaders();
+        let headers = authHeaders;
+        if (headers === undefined) {
+          headers = await requestAuthHeaders();
+          setAuthHeaders(headers);
+        }
+
         const metadata = (
           await uploadImagetoIPFS(
             headers,
@@ -79,6 +90,19 @@ const Admin = (props: Props) => {
       }
     };
     dispatchSave();
+  };
+
+  const refreshList = () => {
+    const dispatchRefresh = async () => {
+      let headers = authHeaders;
+      if (headers === undefined) {
+        headers = await requestAuthHeaders();
+        setAuthHeaders(headers);
+      }
+      const list = await getClaimsList(headers);
+      setClaimsList(list);
+    };
+    dispatchRefresh();
   };
 
   useEffect(() => {
@@ -114,6 +138,7 @@ const Admin = (props: Props) => {
       setFileURL(undefined);
     }
   }, [imageFile]);
+
   return (
     <>
       <div className="bg-gray-800 mt-8" id="Admin">
@@ -299,6 +324,28 @@ const Admin = (props: Props) => {
               </div>
             </div>
           </div>
+        </div>
+        <div className="p-10">
+          {claimsList.length > 0 ? (
+            <>
+              <button
+                type="submit"
+                className="mb-4 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                onClick={refreshList}
+              >
+                Refresh
+              </button>
+              <ClaimTable claims={claimsList}></ClaimTable>
+            </>
+          ) : (
+            <button
+              type="submit"
+              className="mb-4 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+              onClick={refreshList}
+            >
+              Load Claims List
+            </button>
+          )}
         </div>
       </div>
     </>

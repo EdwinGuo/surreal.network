@@ -194,6 +194,28 @@ const getUserInfo = async (address: string, contractInfo: ContractInfo) => {
   }
 };
 
+export interface Claim {
+  collectionToken: string;
+  collection: string;
+  claimTx: string;
+  address: string;
+  dateClaimed: string;
+}
+const getClaimsList = async (authSignature: BasicSignature) => {
+  return (
+    await axios.get('https://api.harmonize.gg/surreal/claims', {
+      auth: {
+        username: authSignature.address,
+        password: authSignature.signature
+      },
+      headers: {
+        accept: 'application/json',
+        'Content-Type': `application/json`
+      }
+    })
+  ).data as Array<Claim>;
+};
+
 const mint = async (
   address: string,
   amount: number,
@@ -431,6 +453,7 @@ export {
   chooseCollection,
   connect,
   claim,
+  getClaimsList,
   getContractInfo,
   getOwnedFromCollection,
   getUserInfo,
