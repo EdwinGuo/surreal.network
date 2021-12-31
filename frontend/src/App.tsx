@@ -12,7 +12,7 @@ import { RootState } from "./app/store";
 import { useSelector } from "react-redux";
 import Admin from "./admin/Admin";
 
-export default function Example() {
+export default function App() {
   const { userInfo } = useSelector((state: RootState) => state.wallet);
   return (
     <>

@@ -45,7 +45,7 @@ const handler = async (event: APIGatewayEvent) => {
   }
 
   const address = await authorize(event.headers.authorization, false);
-  console.log(address + 'attempting claim. Authorized successfully.');
+  console.log(address + ' attempting claim. Authorized successfully.');
   try {
     let claim: Claim;
 
