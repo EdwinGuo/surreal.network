@@ -28,7 +28,7 @@ enum ClaimState {
 const claimSteps: Array<Step> = [
   {
     id: "Sign Message",
-    name: "Send selection to our backend",
+    name: "Prepare your selection for our backend",
     status: StepStatus.current,
   },
   {
@@ -38,7 +38,7 @@ const claimSteps: Array<Step> = [
   },
   {
     id: "Wait",
-    name: "Wait for confirmation",
+    name: "Minting & writing your selection to our backend",
     status: StepStatus.upcoming,
   },
   {
@@ -186,13 +186,13 @@ const Redeem = () => {
           if (collectionToken === undefined) {
             throw Error("Invalid Token Selected");
           }
-          await listen(claimTx);
           await chooseCollection(
             signature,
             collection.name,
             collectionToken,
             claimTx
           );
+          await listen(claimTx);
           setClaimState(ClaimState.DONE);
         } catch (error) {
           console.error(error);
