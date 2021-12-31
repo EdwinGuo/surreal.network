@@ -5,7 +5,7 @@ import { authorize } from '../auth/authorize';
 import Surreal from '../abi/Surreal.json';
 import BAYC from '../abi/BAYC.json';
 import MAYC from '../abi/MAYC.json';
-import { Contract, ethers } from 'ethers';
+import { BigNumber, Contract, ethers } from 'ethers';
 
 const dynamoDbClient = new AWS.DynamoDB.DocumentClient();
 const CLAIMS_TABLE = process.env.CLAIMS_TABLE ?? '';
@@ -27,6 +27,9 @@ const maycContract = new ethers.Contract(MAYC_ADDRESS, MAYC, web3Provider);
 const baycContract = new ethers.Contract(BAYC_ADDRESS, BAYC, web3Provider);
 
 const handler = async (event: APIGatewayEvent) => {
+  console.log('handling claim request with body:');
+  console.log(event.body);
+
   if (
     event.body === undefined ||
     event.body === null ||
@@ -42,13 +45,16 @@ const handler = async (event: APIGatewayEvent) => {
   }
 
   const address = await authorize(event.headers.authorization, false);
-
+  console.log(address + 'attempting claim. Authorized successfully.');
   try {
     let claim: Claim;
 
     try {
       claim = JSON.parse(event.body);
-    } catch {
+      console.log('Successfully parsed claim body');
+      console.log(JSON.stringify(claim));
+    } catch (error) {
+      console.error(error);
       return {
         statusCode: 400,
         headers: {
@@ -59,9 +65,11 @@ const handler = async (event: APIGatewayEvent) => {
     }
 
     try {
+      console.log('Getting tx ' + claim.claimTx);
       const transaction = await web3Provider.getTransaction(claim.claimTx);
       // Validate that this tx was for the claim function
       try {
+        console.log(claim.claimTx + ': Validating tx came from `claim` call.');
         surrealInterface.decodeFunctionData('claim', transaction.data);
       } catch (error) {
         throw Error('Invalid transaction provided');
@@ -84,6 +92,15 @@ const handler = async (event: APIGatewayEvent) => {
           break;
       }
 
+      console.log(
+        claim.claimTx +
+          ': Validating ' +
+          address +
+          ' ownership of ' +
+          claim.collection +
+          ' #' +
+          claim.collectionToken
+      );
       if (
         (await contract.ownerOf(claim.collectionToken)).toLowerCase() !==
         address.toLowerCase()
@@ -93,6 +110,7 @@ const handler = async (event: APIGatewayEvent) => {
         );
       }
     } catch (error) {
+      console.error(error);
       return {
         statusCode: 401,
         body: JSON.stringify({
@@ -106,15 +124,19 @@ const handler = async (event: APIGatewayEvent) => {
     }
 
     const dateClaimed = new Date().getTime().toString();
+    const Item = {
+      ...claim,
+      address,
+      dateClaimed
+    };
+    console.log(claim.claimTx + ': writing item to dynamodb');
+    console.log(JSON.stringify(Item));
     const params: DynamoDB.DocumentClient.PutItemInput = {
       TableName: CLAIMS_TABLE,
-      Item: {
-        ...claim,
-        address,
-        dateClaimed
-      }
+      Item
     };
     await dynamoDbClient.put(params).promise();
+    console.log(claim.claimTx + ': sucessfully wrote item to dynamodb');
     return {
       statusCode: 200,
       headers: {
@@ -122,7 +144,8 @@ const handler = async (event: APIGatewayEvent) => {
         Accept: 'application/json'
       }
     };
-  } catch {
+  } catch (error) {
+    console.error(error);
     return {
       statusCode: 500,
       headers: {
