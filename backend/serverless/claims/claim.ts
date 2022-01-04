@@ -67,13 +67,6 @@ const handler = async (event: APIGatewayEvent) => {
     try {
       console.log('Getting tx ' + claim.claimTx);
       const transaction = await web3Provider.getTransaction(claim.claimTx);
-      // Validate that this tx was for the claim function
-      try {
-        console.log(claim.claimTx + ': Validating tx came from `claim` call.');
-        surrealInterface.decodeFunctionData('claim', transaction.data);
-      } catch (error) {
-        throw Error('Invalid transaction provided');
-      }
       if (
         transaction.from.toLowerCase() !== address.toLowerCase() ||
         transaction.to?.toLowerCase() !== SURREAL_CONTRACT.toLowerCase() ||
