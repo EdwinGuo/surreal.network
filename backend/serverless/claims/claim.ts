@@ -5,14 +5,12 @@ import { authorize } from '../auth/authorize';
 import Surreal from '../abi/Surreal.json';
 import BAYC from '../abi/BAYC.json';
 import MAYC from '../abi/MAYC.json';
-import { BigNumber, Contract, ethers } from 'ethers';
+import { Contract, ethers } from 'ethers';
 
 const dynamoDbClient = new AWS.DynamoDB.DocumentClient();
 const CLAIMS_TABLE = process.env.CLAIMS_TABLE ?? '';
-const SURREAL_CONTRACT = '0xBC4AEE331E970f6E7A5e91f7B911BdBFdF928A98';
 const BAYC_ADDRESS = '0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d';
 const MAYC_ADDRESS = '0x60e4d786628fea6478f785a6d7e704777c86a7c6';
-const surrealInterface = new ethers.utils.Interface(Surreal);
 export interface Claim {
   claimTx: string;
   collection: string;
@@ -65,16 +63,6 @@ const handler = async (event: APIGatewayEvent) => {
     }
 
     try {
-      console.log('Getting tx ' + claim.claimTx);
-      const transaction = await web3Provider.getTransaction(claim.claimTx);
-      if (
-        transaction.from.toLowerCase() !== address.toLowerCase() ||
-        transaction.to?.toLowerCase() !== SURREAL_CONTRACT.toLowerCase() ||
-        (claim.collection !== 'MAYC' && claim.collection !== 'BAYC')
-      ) {
-        throw Error('Incorrect collection provided. Must be BAYC or MAYC.');
-      }
-
       let contract: Contract;
       switch (claim.collection) {
         case 'BAYC':
@@ -83,6 +71,8 @@ const handler = async (event: APIGatewayEvent) => {
         case 'MAYC':
           contract = maycContract;
           break;
+        default:
+          throw Error('Incorrect collection provided. Must be BAYC or MAYC.');
       }
 
       console.log(
