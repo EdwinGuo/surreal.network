@@ -74,8 +74,8 @@ const getContractInfo: ContractInfoFunction = async () => {
   // Hard coded until I can create low-level getters because I forgot to add them to the mintPassContract
   // 🤦🏻‍♂️🤦🏻‍♂️🤦🏻‍♂️🤦🏻‍♂️🤦🏻‍♂️🤦🏻‍♂️🤦🏻‍♂️
   const mintPassContract = getMintPassContract(alchemyProvider);
-  const totalMinted = (await mintPassContract.totalSupply(1)).toNumber();
-  const paused = false;
+  const totalMinted = (await mintPassContract.totalSupply(2)).toNumber();
+  const paused = true;
   const mintPrice: BigNumber = BigNumber.from('40000000000000000');
   let mintPriceString = ethers.utils.formatEther(mintPrice);
 
@@ -89,7 +89,7 @@ const getContractInfo: ContractInfoFunction = async () => {
     mintPriceString,
     maxMintPerWallet: 4,
     maxTokens: 100,
-    requiresSignature: false,
+    requiresSignature: true,
     claimsEnabled
   };
   return contractInfo;
@@ -165,7 +165,7 @@ const getUserInfo = async (address: string, contractInfo: ContractInfo) => {
 
     const mintPassContract = getMintPassContract();
     const numberMinted = (
-      await mintPassContract.balanceOf(address, 1)
+      await mintPassContract.balanceOf(address, 2)
     ).toNumber();
     const isAdmin = await checkAdminStatus(address);
     const selectedCollection = collections[0];
@@ -432,7 +432,7 @@ const getOwnedFromCollection = async (collection: Collection) => {
   }
 };
 
-const availableEditions = [1];
+const availableEditions = [1, 2];
 export interface UserOwnedEdition {
   tokenId: number;
   numberOwned: number;

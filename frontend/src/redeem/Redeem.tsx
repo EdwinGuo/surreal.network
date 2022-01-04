@@ -347,7 +347,9 @@ const Redeem = () => {
                   </button>
                 ) : (
                   <h1 className="mt-8 font-extrabold text-emerald-400">
-                    <Loader></Loader>
+                    <div className="mt-8 text-2xl font-bold">
+                      Claiming is not active
+                    </div>
                   </h1>
                 )}
               </div>

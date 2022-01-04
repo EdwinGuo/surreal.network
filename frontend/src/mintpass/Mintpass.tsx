@@ -21,7 +21,7 @@ import {
   MintStatus,
   UserInfo,
 } from "../services/wallet";
-import mintpass from "./../videos/mintpass.mp4";
+import mintpass from "./../videos/mp2.mp4";
 import "./mintpass.css";
 import opensea from "./../images/opensea.svg";
 import Loader from "../components/loader/Loader";
@@ -131,15 +131,23 @@ const Mintpass = () => {
   };
 
   const canMintMore = () => {
-    return false;
+    return (
+      (userInfo?.numberMinted ?? 0) < (contractInfo?.maxMintPerWallet ?? 0)
+    );
   };
 
   const isSoldOut = () => {
-    // if (contractInfo === undefined) {
-    //   return false;
-    // }
-    // return contractInfo.totalMinted >= contractInfo.maxTokens;
-    return true;
+    if (contractInfo === undefined) {
+      return false;
+    }
+    return contractInfo.totalMinted >= contractInfo.maxTokens;
+  };
+
+  const isActiveSale = () => {
+    if (contractInfo === undefined) {
+      return false;
+    }
+    return !contractInfo.paused;
   };
 
   return (
@@ -147,11 +155,18 @@ const Mintpass = () => {
       <div className="max-w-5xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8 lg:flex lg:justify-between">
         <div className="max-w-xl">
           <h2 className="text-4xl font-extrabold text-white sm:text-5xl sm:tracking-tight lg:text-6xl">
-            Mint Pass #1
+            Mint Pass #2
           </h2>
+
           <div className="mt-4 text-xl text-gray-400">
             <div className="flex flex-col gap-2">
-              <p className="text-2xl text-emerald-500">100/100 Minted</p>
+              {isActiveSale() ? (
+                <p className="text-2xl text-emerald-500">
+                  {contractInfo?.totalMinted}/100 Minted
+                </p>
+              ) : (
+                ""
+              )}
               <p className="text-2xl text-emerald-500">
                 {contractInfo?.mintPriceString}Ξ
               </p>
@@ -162,7 +177,7 @@ const Mintpass = () => {
             {isSoldOut() ? (
               <div className="mt-12 flex font-semibold flex-col gap-2 text-sky-700">
                 <div className="text-6xl">Sold Out!</div>
-                <span>Buy Mint Pass #1</span>
+                <span>Buy Mint Pass #2</span>
                 <a
                   href="https://opensea.io/collection/surreal-mint-pass"
                   target="_blank"
@@ -179,7 +194,7 @@ const Mintpass = () => {
                   </div>
                 </a>
               </div>
-            ) : (
+            ) : isActiveSale() ? (
               <div>
                 <div className="flex flex-col gap-2 mt-8">
                   {validUser() && canMintMore() ? (
@@ -249,7 +264,7 @@ const Mintpass = () => {
                     </h1>
                   ) : (
                     <h1>
-                      Mint Pass #1 is MAYC/BAYC exclusive. We'll open it up more
+                      Mint Pass #2 is MAYC/BAYC exclusive. We'll open it up more
                       for future passes!
                     </h1>
                   )}
@@ -301,6 +316,12 @@ const Mintpass = () => {
                     ""
                   )}
                 </div>
+              </div>
+            ) : (
+              <div className="mt-12">
+                <h1 className="font-semibold text-emerald-500 text-4xl">
+                  Minting Soon
+                </h1>
               </div>
             )}
             <div className="max-w-sm">
