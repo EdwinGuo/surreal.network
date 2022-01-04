@@ -1,9 +1,8 @@
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { BigNumber, Contract } from 'ethers';
-import { ALCHEMY_URL, DISCORD_BOT_KEY, getSecret } from './secrets/secrets';
+import { ALCHEMY_URL, getSecret } from './secrets/secrets';
 import AWS, { DynamoDB } from 'aws-sdk';
 import Surreal from './abi/Surreal.json';
-import { postReveal } from './discord/revealBot';
 
 const dynamoDbClient = new AWS.DynamoDB.DocumentClient({
   region: 'us-east-1'
@@ -25,10 +24,6 @@ const onRevealed = async (tokenId: number, revealTxHash: string) => {
     );
     const metadataUri: string = decodedData.revealedTokenURI;
     await updateRevealedItem(tokenId, claimTx, metadataUri);
-    await postReveal({
-      surrealMetadataUrl: metadataUri,
-      surrealTokenId: `${tokenId}`
-    });
   } catch (error) {
     console.error(error);
   }
