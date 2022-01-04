@@ -167,6 +167,18 @@ const Redeem = () => {
           userInfo?.signature ?? ""
         );
         setClaimTx(claimTx);
+        if (signature === undefined) {
+          throw Error("Invalid signature");
+        }
+        if (collectionToken === undefined) {
+          throw Error("Invalid Token Selected");
+        }
+        await chooseCollection(
+          signature,
+          collection.name,
+          collectionToken,
+          claimTx
+        );
         setClaimState(ClaimState.WAITING);
       } catch (error) {
         setClaimState(ClaimState.ERROR);
@@ -179,18 +191,6 @@ const Redeem = () => {
     const dispatchWaitForClaim = async () => {
       if (claimTx) {
         try {
-          if (signature === undefined) {
-            throw Error("Invalid signature");
-          }
-          if (collectionToken === undefined) {
-            throw Error("Invalid Token Selected");
-          }
-          await chooseCollection(
-            signature,
-            collection.name,
-            collectionToken,
-            claimTx
-          );
           await listen(claimTx);
           setClaimState(ClaimState.DONE);
         } catch (error) {
