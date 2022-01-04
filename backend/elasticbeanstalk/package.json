@@ -20,7 +20,7 @@
     "multiparty": "^4.2.2"
   },
   "scripts": {
-    "start": "concurrently \"ts-node uploadApp.ts\" \"ts-node txListener.ts\"",
+    "start": "ts-node uploadApp.ts",
     "serve": "nodemon app.ts",
     "compile": "tsc"
   },
