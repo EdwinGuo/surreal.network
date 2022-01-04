@@ -147,7 +147,6 @@ const Redeem = () => {
   };
 
   const requestSignature = () => {
-    setClaimState(ClaimState.SIGNING);
     const dispatchRequestSignature = async () => {
       try {
         const signature = await requestAuthHeaders();
