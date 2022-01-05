@@ -320,7 +320,7 @@ const Mintpass = () => {
             ) : (
               <div className="mt-12">
                 <h1 className="font-semibold text-emerald-500 text-4xl">
-                  Minting Soon
+                  1/7/22 12pm CST
                 </h1>
               </div>
             )}
