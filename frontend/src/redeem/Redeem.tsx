@@ -140,7 +140,7 @@ const Redeem = () => {
   }, [collection]);
 
   const canBurn = () => {
-    return userInfo?.numberMinted ?? 0 > 0;
+    return userInfo?.numberMinted1 ?? 0 > 0;
   };
   const connectWalletPressed = () => {
     dispatch(connectWallet());
@@ -347,7 +347,9 @@ const Redeem = () => {
                   </button>
                 ) : (
                   <h1 className="mt-8 font-extrabold text-emerald-400">
-                    <Loader></Loader>
+                    <div className="mt-8 text-2xl font-bold">
+                      Claiming is not active
+                    </div>
                   </h1>
                 )}
               </div>

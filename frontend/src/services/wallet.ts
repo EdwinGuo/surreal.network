@@ -36,7 +36,8 @@ export interface ContractInfo {
 }
 
 export interface UserInfo {
-  numberMinted: number;
+  numberMinted1: number;
+  numberMinted2: number;
   signature?: string;
   isAdmin: boolean;
   signedAddress?: string;
@@ -74,8 +75,8 @@ const getContractInfo: ContractInfoFunction = async () => {
   // Hard coded until I can create low-level getters because I forgot to add them to the mintPassContract
   // 🤦🏻‍♂️🤦🏻‍♂️🤦🏻‍♂️🤦🏻‍♂️🤦🏻‍♂️🤦🏻‍♂️🤦🏻‍♂️
   const mintPassContract = getMintPassContract(alchemyProvider);
-  const totalMinted = (await mintPassContract.totalSupply(1)).toNumber();
-  const paused = false;
+  const totalMinted = (await mintPassContract.totalSupply(2)).toNumber();
+  const paused = true;
   const mintPrice: BigNumber = BigNumber.from('40000000000000000');
   let mintPriceString = ethers.utils.formatEther(mintPrice);
 
@@ -89,7 +90,7 @@ const getContractInfo: ContractInfoFunction = async () => {
     mintPriceString,
     maxMintPerWallet: 4,
     maxTokens: 100,
-    requiresSignature: false,
+    requiresSignature: true,
     claimsEnabled
   };
   return contractInfo;
@@ -164,8 +165,11 @@ const getUserInfo = async (address: string, contractInfo: ContractInfo) => {
     } catch {}
 
     const mintPassContract = getMintPassContract();
-    const numberMinted = (
+    const numberMinted1 = (
       await mintPassContract.balanceOf(address, 1)
+    ).toNumber();
+    const numberMinted2 = (
+      await mintPassContract.balanceOf(address, 2)
     ).toNumber();
     const isAdmin = await checkAdminStatus(address);
     const selectedCollection = collections[0];
@@ -174,7 +178,8 @@ const getUserInfo = async (address: string, contractInfo: ContractInfo) => {
     );
     const userOwnedEditions = await getUserOwnedEditions(address);
     const userInfo: UserInfo = {
-      numberMinted,
+      numberMinted1, // Does not scale but works for now
+      numberMinted2,
       signature,
       isAdmin,
       selectedCollection,
