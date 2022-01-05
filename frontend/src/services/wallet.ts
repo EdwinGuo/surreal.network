@@ -36,7 +36,8 @@ export interface ContractInfo {
 }
 
 export interface UserInfo {
-  numberMinted: number;
+  numberMinted1: number;
+  numberMinted2: number;
   signature?: string;
   isAdmin: boolean;
   signedAddress?: string;
@@ -164,7 +165,10 @@ const getUserInfo = async (address: string, contractInfo: ContractInfo) => {
     } catch {}
 
     const mintPassContract = getMintPassContract();
-    const numberMinted = (
+    const numberMinted1 = (
+      await mintPassContract.balanceOf(address, 1)
+    ).toNumber();
+    const numberMinted2 = (
       await mintPassContract.balanceOf(address, 2)
     ).toNumber();
     const isAdmin = await checkAdminStatus(address);
@@ -174,7 +178,8 @@ const getUserInfo = async (address: string, contractInfo: ContractInfo) => {
     );
     const userOwnedEditions = await getUserOwnedEditions(address);
     const userInfo: UserInfo = {
-      numberMinted,
+      numberMinted1, // Does not scale but works for now
+      numberMinted2,
       signature,
       isAdmin,
       selectedCollection,
@@ -432,7 +437,7 @@ const getOwnedFromCollection = async (collection: Collection) => {
   }
 };
 
-const availableEditions = [1, 2];
+const availableEditions = [1];
 export interface UserOwnedEdition {
   tokenId: number;
   numberOwned: number;

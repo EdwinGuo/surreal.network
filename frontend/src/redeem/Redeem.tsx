@@ -140,7 +140,7 @@ const Redeem = () => {
   }, [collection]);
 
   const canBurn = () => {
-    return userInfo?.numberMinted ?? 0 > 0;
+    return userInfo?.numberMinted1 ?? 0 > 0;
   };
   const connectWalletPressed = () => {
     dispatch(connectWallet());

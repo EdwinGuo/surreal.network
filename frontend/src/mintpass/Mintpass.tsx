@@ -60,7 +60,7 @@ const Mintpass = () => {
     setMintAmount(
       Math.min(
         mintAmount + 1,
-        (contractInfo?.maxMintPerWallet ?? 0) - (userInfo?.numberMinted ?? 0)
+        (contractInfo?.maxMintPerWallet ?? 0) - (userInfo?.numberMinted2 ?? 0)
       )
     );
   };
@@ -132,7 +132,7 @@ const Mintpass = () => {
 
   const canMintMore = () => {
     return (
-      (userInfo?.numberMinted ?? 0) < (contractInfo?.maxMintPerWallet ?? 0)
+      (userInfo?.numberMinted2 ?? 0) < (contractInfo?.maxMintPerWallet ?? 0)
     );
   };
 
@@ -297,7 +297,7 @@ const Mintpass = () => {
                           )}{" "}
                       </p>
                       <p className="text-xl text-emerald-800">
-                        {userInfo?.numberMinted ?? 0}/4 Minted
+                        {userInfo?.numberMinted2 ?? 0}/4 Minted
                       </p>
                       {errorMessage ? (
                         <p className="text-xl text-red-700">
