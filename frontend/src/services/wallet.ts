@@ -76,7 +76,7 @@ const getContractInfo: ContractInfoFunction = async () => {
   // 🤦🏻‍♂️🤦🏻‍♂️🤦🏻‍♂️🤦🏻‍♂️🤦🏻‍♂️🤦🏻‍♂️🤦🏻‍♂️
   const mintPassContract = getMintPassContract(alchemyProvider);
   const totalMinted = (await mintPassContract.totalSupply(2)).toNumber();
-  const paused = true;
+  const paused = false;
   const mintPrice: BigNumber = BigNumber.from('40000000000000000');
   let mintPriceString = ethers.utils.formatEther(mintPrice);
 

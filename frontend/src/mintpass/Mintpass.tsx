@@ -263,10 +263,15 @@ const Mintpass = () => {
                       your NFTs!
                     </h1>
                   ) : (
-                    <h1>
-                      Mint Pass #2 is MAYC/BAYC exclusive. We'll open it up more
-                      for future passes!
-                    </h1>
+                    <>
+                      <h1 className="text-emerald-500 font-semibold">
+                        Mint Pass #2 is MAYC/BAYC exclusive
+                      </h1>
+                      <h1 className="text-emerald-600 mt-2">
+                        In the future, we may open up minting to other
+                        collections
+                      </h1>
+                    </>
                   )}
                   {mintStatus === MintStatus.COMPLETE ? (
                     <h1 className="text-xl mt-4">
