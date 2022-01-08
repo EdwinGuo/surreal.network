@@ -28,7 +28,7 @@
     '0x169f97de0d9a84d840042b17d3c6b9638b3d6fd9024c9eb0c7a306a17b49f896'
     > await provider.getStorageAt("0x18d0E051317E04Ae96314C372Bd35220460eEc62", value);
       '0x0000000000000000000000000000000000000000000000000000000000000000'
-      mapping
+      MAPPING_SLOT
 
 
 
@@ -70,7 +70,7 @@ const MINT_PASS_CONTRACT_ADDR_RINKEBY =
         bool requiresSignature;
         bool saleActive;
         uint256 numberMinted;
-        mapping(address => uint256) mintsPerAddress;
+        MAPPING_SLOT(address => uint256) mintsPerAddress;
     }
 */
 
@@ -91,7 +91,7 @@ enum STRUCT_SLOTS {
   WALLET_MINT_LIMIT = 2,
   TOTAL_MINTED = 3, // A mistake in the contract. Unused.
   TOKEN_URI = 4,
-  BOOLEAN_SLOT = 5, // 0x00...00[saleActive][requiresSignature]
+  BOOLEAN_SLOT = 5, // 0x00...00[saleActive]0[requiresSignature]
   NUMBER_MINTED = 6,
   MINTS_PER_ADDRESS_MAPPING = 7
 }
@@ -154,6 +154,32 @@ export const getMintpassInfo = async (
   };
 };
 
+export const getMintedAmountForAddress = async (
+  address: string,
+  mintPassId: number,
+  provider: Provider
+) => {
+  const perAddressSlot = getOffsetValue(
+    getMintPassSlot(mintPassId),
+    STRUCT_SLOTS.MINTS_PER_ADDRESS_MAPPING
+  );
+
+  const valueLocation = ethers.utils.solidityKeccak256(
+    ['bytes32', 'uint'],
+    [
+      ethers.utils.arrayify(ethers.utils.hexZeroPad(address, 32)),
+      perAddressSlot
+    ]
+  );
+
+  return BigNumber.from(
+    await provider.getStorageAt(
+      await getAddressForNetwork(provider),
+      valueLocation
+    )
+  ).toNumber();
+};
+
 const getMintPassSlot = (mintPassId: number) => {
   return ethers.utils.solidityKeccak256(
     ['uint', 'uint'],
@@ -170,9 +196,19 @@ const getMintPassStructStorageOffsetBy = async (
   mintPassId: number,
   provider: Provider
 ) => {
+  return await getStorageAt(
+    provider,
+    getOffsetValue(getMintPassSlot(mintPassId), offset)
+  );
+};
+
+const getStorageAt = async (
+  provider: Provider,
+  position: BigNumberish | Promise<BigNumberish>
+) => {
   return await provider.getStorageAt(
     await getAddressForNetwork(provider),
-    getOffsetValue(getMintPassSlot(mintPassId), offset)
+    position
   );
 };
 

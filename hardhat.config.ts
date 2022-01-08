@@ -6,6 +6,7 @@ import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
 import 'hardhat-gas-reporter';
 import 'hardhat-abi-exporter';
+import 'hardhat-storage-layout';
 import 'solidity-coverage';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { exit } from 'process';
@@ -13,6 +14,10 @@ import { exit } from 'process';
 dotenv.config();
 
 const frontendContractRoot = './frontend/src/contracts/';
+
+task('printStorage', async (_, hre) => {
+  await hre.storageLayout.export();
+});
 
 task('verifyContract', async (taskArgs, hre) => {
   await hre.run('verify:verify', {
@@ -41,6 +46,11 @@ const config: HardhatUserConfig = {
       optimizer: {
         enabled: true,
         runs: 10
+      },
+      outputSelection: {
+        '*': {
+          '*': ['storageLayout']
+        }
       }
     }
   },

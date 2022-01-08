@@ -13,6 +13,7 @@ import BAYC from '../contracts/apes/BAYC.json';
 import axios, { AxiosError } from 'axios';
 import {
   getCurrentActiveMintPass,
+  getMintedAmountForAddress,
   getMintpassInfo
 } from '../utilities/MintPassInspector';
 
@@ -159,21 +160,14 @@ const validateNetwork = async () => {
 
 const printInfo = async () => {
   const activeMintPass = await getCurrentActiveMintPass(getMintPassContract());
-  console.log(`Active Mint Pass: ${activeMintPass}`);
-  const printInfo = async (mintpass: number) => {
-    const info = await getMintPassInfo(mintpass);
-    console.log(`
-    Mint Pass ${mintpass}
-    -----------------------------------
-    Price: ${ethers.utils.formatEther(info.mintPrice)}
-    Number Minted: ${info.numberMinted.toNumber()}
-    Max Passes: ${info.passMintLimit.toNumber()}
-    Max Per Wallet: ${info.walletMintLimit.toNumber()}
-    Is Sale Active: ${info.saleActive}
-    Signature Required: ${info.signatureRequired}
-    Token URI: ${info.tokenURI}
-    `);
-  };
+  const info = await getMintPassInfo(activeMintPass);
+  const address = '0x5Fea9DAcdE1fb43E87b8a9259Aebc937D995F51b';
+  const mp = 2;
+  const numberMinted = await getMintedAmountForAddress(
+    address,
+    mp,
+    getMintPassContract().provider
+  );
 
   await printInfo(activeMintPass);
 };
