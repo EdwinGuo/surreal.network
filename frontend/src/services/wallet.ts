@@ -11,6 +11,10 @@ import SurrealABI from '../contracts/artifacts/Surreal.json';
 import MAYC from '../contracts/apes/MAYC.json';
 import BAYC from '../contracts/apes/BAYC.json';
 import axios, { AxiosError } from 'axios';
+import {
+  getCurrentActiveMintPass,
+  getMintpassInfo
+} from '../utilities/MintPassInspector';
 
 declare let window: any;
 let provider: Web3Provider;
@@ -72,15 +76,13 @@ export interface ErrorResponse {
 
 type ContractInfoFunction = () => Promise<ContractInfo>;
 const getContractInfo: ContractInfoFunction = async () => {
-  // Hard coded until I can create low-level getters because I forgot to add them to the mintPassContract
-  // 🤦🏻‍♂️🤦🏻‍♂️🤦🏻‍♂️🤦🏻‍♂️🤦🏻‍♂️🤦🏻‍♂️🤦🏻‍♂️
-  const mintPassContract = getMintPassContract(alchemyProvider);
+  const mintPassContract = getMintPassContract();
   const totalMinted = (await mintPassContract.totalSupply(2)).toNumber();
   const paused = false;
   const mintPrice: BigNumber = BigNumber.from('40000000000000000');
   let mintPriceString = ethers.utils.formatEther(mintPrice);
 
-  const surrealContract = getSurrealContract(alchemyProvider);
+  const surrealContract = getSurrealContract();
   const claimsEnabled = (await surrealContract.paused()) == false;
 
   const contractInfo: ContractInfo = {
@@ -94,6 +96,10 @@ const getContractInfo: ContractInfoFunction = async () => {
     claimsEnabled
   };
   return contractInfo;
+};
+
+const getMintPassInfo = async (mintPassId: number) => {
+  return await getMintpassInfo(getMintPassContract(), mintPassId);
 };
 
 const connect = async () => {
@@ -151,7 +157,29 @@ const validateNetwork = async () => {
   }
 };
 
-const getUserInfo = async (address: string, contractInfo: ContractInfo) => {
+const printInfo = async () => {
+  const activeMintPass = await getCurrentActiveMintPass(getMintPassContract());
+  console.log(`Active Mint Pass: ${activeMintPass}`);
+  const printInfo = async (mintpass: number) => {
+    const info = await getMintPassInfo(mintpass);
+    console.log(`
+    Mint Pass ${mintpass}
+    -----------------------------------
+    Price: ${ethers.utils.formatEther(info.mintPrice)}
+    Number Minted: ${info.numberMinted.toNumber()}
+    Max Passes: ${info.passMintLimit.toNumber()}
+    Max Per Wallet: ${info.walletMintLimit.toNumber()}
+    Is Sale Active: ${info.saleActive}
+    Signature Required: ${info.signatureRequired}
+    Token URI: ${info.tokenURI}
+    `);
+  };
+
+  await printInfo(activeMintPass);
+};
+
+const getUserInfo = async (address: string) => {
+  await printInfo();
   try {
     let signature: string | undefined;
     try {
@@ -318,9 +346,7 @@ const reveal = async (metadata: SurrealMetadata, tokenId: string) => {
   }
 };
 
-const getMintPassContract = (
-  web3Provider: JsonRpcProvider | undefined = undefined
-) => {
+const getMintPassContract = () => {
   let contractAddress = SURREAL_MINTPASS_ADDRESS;
   if (provider !== undefined && provider.network.name === 'rinkeby') {
     contractAddress = SURREAL_MINTPASS_ADDRESS_RINKEBY;
@@ -328,14 +354,12 @@ const getMintPassContract = (
   const mintPassContract = new ethers.Contract(
     contractAddress,
     SurrealMintPassFactoryABI,
-    provider ? provider.getSigner() : web3Provider
+    provider ? provider.getSigner() : alchemyProvider
   ) as SurrealMintPassFactory;
   return mintPassContract;
 };
 
-const getSurrealContract = (
-  web3Provider: JsonRpcProvider | undefined = undefined
-) => {
+const getSurrealContract = () => {
   let contractAddress = SURREAL_ADDRESS;
   if (provider !== undefined && provider.network.name === 'rinkeby') {
     contractAddress = SURREAL_ADDRESS_RINKEBY;
@@ -343,7 +367,7 @@ const getSurrealContract = (
   const mintPassContract = new ethers.Contract(
     contractAddress,
     SurrealABI,
-    provider ? provider.getSigner() : web3Provider
+    provider ? provider.getSigner() : alchemyProvider
   ) as Surreal;
   return mintPassContract;
 };
@@ -469,6 +493,7 @@ export {
   claim,
   getClaimsList,
   getContractInfo,
+  getMintPassInfo,
   getOwnedFromCollection,
   getUserInfo,
   listen,

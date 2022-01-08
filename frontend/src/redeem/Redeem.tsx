@@ -104,12 +104,13 @@ const Redeem = () => {
     setCollection(collections[0]);
   };
 
+  const { userInfo, connection, isLoadingCollection, contractInfoState } =
+    useSelector((state: RootState) => state.wallet);
+  const { contractInfo } = contractInfoState;
+
   const claimWindowOpen = () => {
     return contractInfo?.claimsEnabled ?? false;
   };
-
-  const { userInfo, connection, isLoadingCollection, contractInfo } =
-    useSelector((state: RootState) => state.wallet);
 
   useEffect(() => {
     if (

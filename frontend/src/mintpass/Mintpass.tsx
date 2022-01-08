@@ -31,9 +31,10 @@ function classNames(...classes: Array<string>) {
 }
 
 const Mintpass = () => {
-  const { connection, contractInfo, userInfo } = useSelector(
+  const { connection, contractInfoState, userInfo } = useSelector(
     (state: RootState) => state.wallet
   );
+  const { contractInfo } = contractInfoState;
   const dispatch = useDispatch();
   const [mintAmount, setMintAmount] = useState(1);
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
@@ -116,10 +117,7 @@ const Mintpass = () => {
       if (mintStatus == MintStatus.COMPLETE) {
         const newContractInfo = await getContractInfo();
         setContractInfo(newContractInfo);
-        const userInfo = await getUserInfo(
-          connection?.address ?? "",
-          newContractInfo
-        );
+        const userInfo = await getUserInfo(connection?.address ?? "");
         setUserInfo(userInfo);
       }
     };
@@ -168,7 +166,9 @@ const Mintpass = () => {
                 ""
               )}
               <p className="text-2xl text-emerald-500">
-                {contractInfo?.mintPriceString}Ξ
+                {contractInfo?.mintPriceString
+                  ? `${contractInfo?.mintPriceString} Ξ`
+                  : ""}
               </p>
               <p className="text-lg">Max 4 per wallet</p>
               <p className="text-lg">MAYC/BAYC Exclusive</p>

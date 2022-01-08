@@ -14,16 +14,26 @@ import {
 
 export interface WalletState {
   connection?: ConnectionResponse;
-  contractInfo?: ContractInfo;
+  contractInfoState: ContractInfoState;
   userInfo?: UserInfo;
+
   isConnecting: boolean;
   isLoadingCollection: boolean;
   errorMessage?: string;
 }
 
+export interface ContractInfoState {
+  isLoading: boolean;
+  contractInfo?: ContractInfo;
+  error?: string;
+}
+
 const initialState: WalletState = {
   isConnecting: false,
-  isLoadingCollection: false
+  isLoadingCollection: false,
+  contractInfoState: {
+    isLoading: false
+  }
 };
 
 export const walletSlice = createSlice({
@@ -31,7 +41,7 @@ export const walletSlice = createSlice({
   initialState,
   reducers: {
     setContractInfo: (state, action: PayloadAction<ContractInfo>) => {
-      state.contractInfo = action.payload;
+      state.contractInfoState.contractInfo = action.payload;
     },
     setUserInfo: (state, action: PayloadAction<UserInfo>) => {
       state.userInfo = action.payload;
@@ -43,7 +53,6 @@ export const walletSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(initialize.fulfilled, (state, { payload }) => {
       state.connection = payload.connection;
-      state.contractInfo = payload.contractInfo;
       state.userInfo = payload.userInfo;
     });
     builder.addCase(connectWallet.pending, (state, { payload }) => {
@@ -69,14 +78,32 @@ export const walletSlice = createSlice({
     builder.addCase(selectCollection.pending, (state, { payload }) => {
       state.isLoadingCollection = true;
     });
+    builder.addCase(loadStaticContractInfo.pending, (state) => {
+      state.contractInfoState.isLoading = true;
+    });
+    builder.addCase(loadStaticContractInfo.fulfilled, (state, { payload }) => {
+      state.contractInfoState.isLoading = false;
+      state.contractInfoState.contractInfo = payload;
+    });
+    builder.addCase(loadStaticContractInfo.rejected, (state, { payload }) => {
+      state.contractInfoState.isLoading = false;
+      state.contractInfoState.error = payload as string;
+    });
   }
 });
 
 interface InitializationResponse {
-  contractInfo: ContractInfo;
   connection?: ConnectionResponse;
   userInfo?: UserInfo;
 }
+
+export const loadStaticContractInfo = createAsyncThunk(
+  'wallet/loadStaticContractInfo',
+  async () => {
+    return await getContractInfo();
+  }
+);
+
 export const initialize = createAsyncThunk<
   InitializationResponse,
   void,
@@ -85,15 +112,14 @@ export const initialize = createAsyncThunk<
     state: RootState;
   }
 >('wallet/initialize', async (_, { getState, rejectWithValue, dispatch }) => {
-  const contractInfo = await getContractInfo();
   const isConnected = (await checkConnection()) ?? false;
   let connection: ConnectionResponse | undefined;
   let userInfo: UserInfo | undefined;
-  if (isConnected && contractInfo) {
+  if (isConnected) {
     connection = await connect();
-    userInfo = await getUserInfo(connection.address, contractInfo);
+    userInfo = await getUserInfo(connection.address);
   }
-  return { contractInfo, connection, userInfo };
+  return { connection, userInfo };
 });
 
 interface ConnectWalletResponse {
@@ -106,16 +132,15 @@ export const connectWallet = createAsyncThunk(
   async (_, { getState, rejectWithValue, dispatch }) => {
     const connection = await connect();
     const address = connection?.address;
-    const { contractInfo } = (getState() as RootState).wallet;
-    if (address && contractInfo) {
-      const userInfo = await getUserInfo(address, contractInfo);
+    if (address) {
+      const userInfo = await getUserInfo(address);
       if (userInfo) {
         return { connection, userInfo } as ConnectWalletResponse;
       } else {
-        rejectWithValue('Could not connect');
+        return rejectWithValue('Could not connect');
       }
     } else {
-      rejectWithValue('Could not connect');
+      return rejectWithValue('Could not connect');
     }
   }
 );
